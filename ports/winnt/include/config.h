@@ -159,7 +159,7 @@ struct timeval {
  * Unix and  implemented in the Windows port similarly to
  * refclock_open().
  */
-extern int tty_open(char *, int, int);
+extern int tty_open(const char *, int, int);
 
 /*
  * disable use of __declspec(dllexport) by libisc routines
@@ -248,7 +248,6 @@ typedef int socklen_t;
 #define TYPEOF_IP_MULTICAST_LOOP	BOOL
 #define SETSOCKOPT_ARG_CAST		(const char *)
 #define HAVE_RANDOM 
-#define AUTOKEY
 #define SAVECONFIG			1
 
 /*
@@ -256,9 +255,12 @@ typedef int socklen_t;
  */
 #define USE_MM_TIMER
 
-/* Enable OpenSSL */
-#define OPENSSL 1
-#define USE_OPENSSL_CRYPTO_RAND 1
+/* check for OpenSSL */
+#ifdef OPENSSL
+# define USE_OPENSSL_CRYPTO_RAND 1
+# define AUTOKEY
+#endif
+extern void arc4random_buf(void *buf, size_t nbytes);
 
 /*
  * Keywords and functions that Microsoft maps
@@ -378,6 +380,10 @@ typedef int ssize_t;	/* ssize is an int */
 #define HAVE_UNSIGNED_LONG_LONG_INT	1
 #define HAVE_SIZE_T             1     
 #define HAVE_PTRDIFF_T  		1
+
+#if defined(_MSC_VER) && _MSC_VER >= 1900
+#define HAVE_WINT_T				1
+#endif
 
 # define SIZEOF_SIGNED_CHAR	1
 # define SIZEOF_SHORT		2
@@ -544,6 +550,12 @@ typedef unsigned long uintptr_t;
 #undef STRINGIZE
 
 #define  SIOCGIFFLAGS SIO_GET_INTERFACE_LIST /* used in ntp_io.c */
+
+/* Bug 2978 mitigation -- unless defined elsewhere, do it here*/
+#ifndef DYNAMIC_INTERLEAVE
+# define DYNAMIC_INTERLEAVE 0
+#endif
+
 /*
  * Below this line are includes which must happen after the bulk of
  * config.h is processed.  If you need to add another #include to this
